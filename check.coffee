@@ -1,5 +1,5 @@
 
-hostnames = ['heise.de', 'roguejs.com', 'lovefilm.com', 'spiegel.de', 'computerbase.de', 'zeit.de', 'nodejs.org', 'w3schools.com', 'fotocommunity.de', 'fotocommunity.com', 'fefe.de']
+hostnames = ['heise.de', 'roguejs.com', 'lovefilm.com', 'spiegel.de', 'computerbase.de', 'zeit.de', 'nodejs.org', 'w3schools.com', 'fotocommunity.de', 'fotocommunity.com', 'fefe.de', 'macrumors.com']
 
 forbidden = ['c.spiegel.de', 'prophet.heise.de']
 

@@ -23,7 +23,7 @@
     n = _ref[i];
     for (j = _i = 0, _len = n.length; _i < _len; j = ++_i) {
       m = n[j];
-      if (m.family === 'IPv4' && m.internal === false) {
+      if (m.family === 'IPv4' && m.internal === false && m.address !== '127.0.0.1') {
         ipAddresses.push(m.address);
       }
     }

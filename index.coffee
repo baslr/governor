@@ -13,7 +13,7 @@ ipAddresses = []
 
 for i,n of os.networkInterfaces()
   for m,j in n
-    if m.family is 'IPv4' and m.internal is false
+    if m.family is 'IPv4' and m.internal is false and m.address isnt '127.0.0.1'
       ipAddresses.push m.address
 
 

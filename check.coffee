@@ -1,10 +1,10 @@
+config = require './config'
 
-hostnames = ['heise.de', 'roguejs.com', 'lovefilm.com', 'spiegel.de', 'computerbase.de', 'zeit.de', 'nodejs.org', 'w3schools.com', 'fotocommunity.de', 'fotocommunity.com', 'fefe.de', 'macrumors.com']
+hostnames = config.get 'hostnames'
 
 forbidden = ['c.spiegel.de', 'prophet.heise.de']
 
 badHrefs   = ['http://www.computerbase.de/stats.php', 'http://m.heise.de/avw-bin']
-
 
 module.exports = (urlObj) ->
 
@@ -15,12 +15,9 @@ module.exports = (urlObj) ->
     return false
 
   return true
-  
-
 
 # false = hostname ist böse
 # true  = hostname ist okay denn in liste
-
 
 badHostname = (hostname) ->
   for n,i in forbidden

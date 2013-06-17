@@ -1,11 +1,16 @@
 
 cookies   = {'www.heise.de':0}
 
-http     = require 'http'
-url      = require 'url'
-zlib     = require 'zlib'
-check    = require './check'
-os       = require 'os'
+os     = require 'os'
+zlib   = require 'zlib'
+
+http   = require 'http'
+url    = require 'url'
+
+check  = require './check'
+config = require './config'
+
+
 
 
 
@@ -43,6 +48,11 @@ server.on 'request', (req, res) ->
     console.dir    e
 
   urlObj = url.parse req.url
+  
+  if urlObj.hostname is 'config'
+    config.request req, res, urlObj
+    return
+  
 
   delete req.headers['cookie']
   delete req.headers['proxy-connection']

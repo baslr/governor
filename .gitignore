@@ -3,3 +3,6 @@
 /cache
 /lfCache
 /node_modules
+
+
+*.js

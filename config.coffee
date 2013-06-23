@@ -1,7 +1,12 @@
+fs         = require 'fs'
+url        = require 'url'
+http       = require 'http'
 
-fs  = require 'fs'
+nodeStatic = require 'node-static'
+staticS    = new nodeStatic.Server "./public"
 
-gets = {}
+hostNameUpdateFnc = ->
+gets              = {}
 
 module.exports.get = (key) ->
   if !gets['key']?
@@ -9,22 +14,43 @@ module.exports.get = (key) ->
     return gets['key']
   return gets['key']
 
-
 module.exports.load = (fileName) ->
   return JSON.parse fs.readFileSync fileName
   
 module.exports.save = (fileName, json) ->
   fs.writeFileSync fileName, JSON.stringify json
+
+server = http.createServer()
+server.listen 12101, '0.0.0.0'
+
+ioServer = require('socket.io').listen(server)
+ioServer.set('log level', 1)
+
+server.on 'error', (e) ->
+  console.error "http:server:e"
+  console.dir    e
+
+server.on 'request', (req, res) ->
+  if  -1 is req.url.search '/socket.io/1'                                       
+    staticS.serve req, res
+    
+    urlObj = url.parse req.url
+
+    if urlObj.query?
+      newHostName = urlObj.query.split('=')[1]
+
+      json = exports.get 'hostnames'
+    
+      if -1 is json.indexOf newHostName
+        hostNameUpdateFnc newHostName
+        json.push newHostName
+        exports.save 'hostnames.json', json
+        
+ioServer.sockets.on 'connection', (socket) ->
+  socket.emit 'guten Tag :D'
   
-module.exports.request = (req, res, urlObj) ->
-
-  if urlObj.query?
-    newHostName = urlObj.query.split('=')[1]
-    
-    json = @get 'hostnames'
-    
-    if -1 is json.indexOf newHostName
-      json.push newHostName
-      @save 'hostnames.json', json
-
-  fs.createReadStream('index.html').pipe res
+module.exports.toAll = (msg, data) ->
+  ioServer.sockets.emit msg, data
+  
+module.exports.setHostnameUpdateFnc = ( fnc ) ->
+  hostNameUpdateFnc = fnc

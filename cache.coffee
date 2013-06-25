@@ -31,4 +31,19 @@ module.exports.getCache = (href) ->
   return readCacheFile href
     
 module.exports.delete = (href) ->
-  fs.unlink 
+  fs.unlink "cache/#{md5 href}"
+  
+module.exports.deliver = (urlObj, res) ->
+  if @isCache urlObj.href
+    data = @getCache urlObj.href
+
+    if -1 < urlObj.path.search '\\.png'
+      res.setHeader 'content-type'  , 'image/png'
+      
+    res.setHeader 'content-encoding', 'gzip'
+    res.setHeader 'content-length'  ,  data.length
+    res.end data
+    console.log "from cache: #{urlObj.href}"
+    
+    return true
+  return false

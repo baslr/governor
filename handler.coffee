@@ -59,29 +59,20 @@ module.exports = (req, res) ->
     res.end ''
     return
 
-  if -1 < urlObj.path.search '/lf/encrypted/'
-    lf.pathInfo urlObj.path, container
-
   req.on 'end', ->
     if -1 < urlObj.path.search '/lf/encrypted/'
+      lf.pathInfo urlObj.path, container
+
       if lf.isCached urlObj.path
         res.end lf.getCachedData urlObj.path
         container.cached = '1'
         config.toAll 'add-container', container
         return
-        
-    if -1 < urlObj.path.search "\\.(#{extensions.join '|'})$"
-      if cache.isCache urlObj.href
-        data = cache.getCache urlObj.href
 
-        if -1 < urlObj.path.search '\\.png'
-          res.setHeader 'content-type'  , 'image/png'
-
-        res.setHeader 'content-encoding', 'gzip'
-        res.setHeader 'content-length'  ,  data.length
-        res.end data
-        console.log "from cache: #{urlObj.href}"
-        return
+    if cache.deliver urlObj, res
+      container.cached = '1'
+      config.toAll 'add-container', container
+      return
 
     reqReq = http.request {  localAddress: ipAddresses[0] # 192.168.2.100' #'192.168.42.11' #
                   , hostname: urlObj.hostname

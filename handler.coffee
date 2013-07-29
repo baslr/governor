@@ -18,7 +18,7 @@ for i,n of os.networkInterfaces()
 console.log ipAddresses
 
 module.exports = (req, res) ->
-  container = {id:id++, time:Math.floor new Date().getTime()}/1000}
+  container = {id:id++, time:Math.floor new Date().getTime()/1000}
 
   delete req.headers['cookie']                                                                      # remove non needed kram
   delete req.headers['proxy-connection']

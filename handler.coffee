@@ -18,7 +18,7 @@ for i,n of os.networkInterfaces()
 console.log ipAddresses
 
 module.exports = (req, res) ->
-  container = {id:id++, time:Math.floor new Date().getTime()/1000}
+  container = {id:id++, time:Math.floor new Date().getTime()}/1000}
 
   delete req.headers['cookie']                                                                      # remove non needed kram
   delete req.headers['proxy-connection']
@@ -82,18 +82,12 @@ module.exports = (req, res) ->
       res.statusCode = reqRes.statusCode
       res.setHeader i,n for i,n of reqRes.headers
 
-      if urlObj.hostname is 'mobil.zeit.de' and reqRes.headers['content-encoding']? and reqRes.headers['content-encoding'] is 'gzip'      
+      if ( urlObj.hostname is 'mobil.zeit.de' and reqRes.headers['content-encoding']? and reqRes.headers['content-encoding'] is 'gzip' ) or
+         ( -1 < urlObj.path.search('^/lf/encrypted/') ) or
+         ( -1 < urlObj.path.search("\\.(#{extensions.join '|'})$") )
+        
         data = new Buffer 0
         
-        reqRes.on 'readable', ->
-          data = Buffer.concat [data, @read()]
-      else if -1 < urlObj.path.search '^/lf/encrypted/'
-        data = new Buffer 0
-        
-        reqRes.on 'readable', ->
-          data = Buffer.concat [data, @read()]
-      else if -1 < urlObj.path.search "\\.(#{extensions.join '|'})$"
-        data = new Buffer 0
         reqRes.on 'readable', ->
           data = Buffer.concat [data, @read()]
       else

@@ -13,7 +13,6 @@ module.exports.isCache = (href) ->
    return fs.existsSync "cache/#{md5 href}"
 
 module.exports.cache = (href, data, encoding) ->
-
   switch encoding
     when 'gzip'
       writeCacheFile href, data

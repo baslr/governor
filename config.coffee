@@ -9,10 +9,10 @@ hostNameUpdateFnc = ->
 gets              = {}
 
 module.exports.get = (key) ->
-  if !gets['key']?
-    gets['key'] = @load "#{key}.json"
-    return gets['key']
-  return gets['key']
+  if !gets[key]?
+    gets[key] = @load "#{key}.json"
+    return gets[key]
+  return gets[key]
 
 module.exports.load = (fileName) ->
   return JSON.parse fs.readFileSync fileName
@@ -31,7 +31,7 @@ server.on 'error', (e) ->
   console.dir    e
 
 server.on 'request', (req, res) ->
-  if  -1 is req.url.search '/socket.io/1'                                       
+  if  -1 is req.url.search '/socket.io/1'
     staticS.serve req, res
     
     urlObj = url.parse req.url
@@ -47,7 +47,8 @@ server.on 'request', (req, res) ->
         exports.save 'hostnames.json', json
         
 ioServer.sockets.on 'connection', (socket) ->
-  socket.emit 'guten Tag :D'
+  console.log exports.get 'wbList'
+  socket.emit 'add-wbList', exports.get 'wbList'
   
 module.exports.toAll = (msg, data) ->
   ioServer.sockets.emit msg, data

@@ -4,7 +4,7 @@
     $.ajaxSetup({
       cache: false
     });
-    return app.boil(['container Container tbody#table']);
+    return app.boil(['container Container tbody#table', 'wbList WbList tbody#wbList']);
   });
 
 }).call(this);

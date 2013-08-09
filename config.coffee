@@ -14,6 +14,9 @@ module.exports.get = (key) ->
     return gets[key]
   return gets[key]
 
+module.exports.set = (key, data) ->
+  gets[key] = data
+
 module.exports.load = (fileName) ->
   return JSON.parse fs.readFileSync fileName
   
@@ -33,23 +36,34 @@ server.on 'error', (e) ->
 server.on 'request', (req, res) ->
   if  -1 is req.url.search '/socket.io/1'
     staticS.serve req, res
-    
-    urlObj = url.parse req.url
-
-    if urlObj.query?
-      newHostName = urlObj.query.split('=')[1]
-
-      json = exports.get 'hostnames'
-    
-      if -1 is json.indexOf newHostName
-        hostNameUpdateFnc newHostName
-        json.push newHostName
-        exports.save 'hostnames.json', json
         
 ioServer.sockets.on 'connection', (socket) ->
   console.log exports.get 'wbList'
   socket.emit 'add-wbList', exports.get 'wbList'
   
+  socket.on 'replace-wbListItem', (item) ->
+    console.log 'replace-wbListItem'
+    console.dir item
+    
+    wbList = exports.get 'wbList'
+    
+    for n,i in wbList
+      if n.id is item.id
+        wbList[i] = item
+        break
+    
+    exports.set  'wbList',      wbList
+    exports.save 'wbList.json', wbList
+  
+  socket.on 'new-wbListItem', (item) ->
+    console.log 'new-wbListItem'
+    console.dir item
+    
+    wbList = exports.get 'wbList'
+    wbList.push item
+    exports.set  'wbList',      wbList
+    exports.save 'wbList.json', wbList
+    
 module.exports.toAll = (msg, data) ->
   ioServer.sockets.emit msg, data
   

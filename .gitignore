@@ -6,3 +6,4 @@
 
 
 *.js
+!/public/vendor/js/*.js

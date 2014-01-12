@@ -1,65 +1,26 @@
-config = require './config'
 
-hostnames = config.get 'hostnames'  # god hostnames
-cache     = {}
 
-config.setHostnameUpdateFnc (hostName) ->
-  for i,n of cache
-    if -1 < i.search "#{hostName}$"
-      delete cache[i]
-      cache[hostName] = false
-      return
+wbList    = require './wbList'
 
-forbidden = ['c.spiegel.de', 'prophet.heise.de']
-badHrefs  = ['http://www.computerbase.de/stats.php', 'http://m.heise.de/avw-bin']
+#  true = hostname bad
+# false = hostname god
 
 module.exports.isBad = (urlObj) ->
 
-  if badHref urlObj.hostname, urlObj.href
+  dbg 'check in bad hostnames'
+  if wbList.inBadHostnames urlObj.hostname
+    dbg "IN BAD HOSTNAMES: #{urlObj.hostname}"
     return true
 
-  if badHostname urlObj.hostname
+  dbg 'check for bad href'
+  if wbList.isBadHref urlObj.href
     return true
-
-  return false
-
-#  true = hostname ist böse
-# false = hostname ist okay denn in liste
-
-# 31 RED
-# 32 GREEN
-
-badHostname = (hostname) ->
-  if cache[hostname]?
-    console.log "hostnameCache: #{hostname}=#{cache[hostname]}"
-    return cache[hostname]
-
-  for n,i in forbidden
-    if n is hostname
-      console.log "\x1b[31mHOSTNAME -> #{hostname}\x1b[0m"   
-      cache[hostname] = true
-      return true
-
-  for n,i in hostnames
-    if -1 < hostname.search "[*.]#{n}$"
-      console.log "\x1b[32mHOSTNAME -> #{hostname}\x1b[0m"
-      cache[hostname] = false
-      return false
-      
-    if -1 < hostname.search "#{n}$"
-      console.log "\x1b[32mHOSTNAME -> #{hostname}\x1b[0m"
-      cache[hostname] = false
-      return false
-      
-  console.log "\x1b[31mHOSTNAME -> #{hostname}\x1b[0m"
-  cache[hostname] = true
-  return true
   
-badHref = (hostname, href) ->
-  for n,i in badHrefs
-    if -1 < href.search "^#{n}"
-      console.log "\x1b[31mHREF -> #{href}\x1b[0m"
-      return true
-
-  console.log "\x1b[32mHREF -> #{href}\x1b[0m"
+  dbg 'check for bad hostname'
+  if wbList.isBadHostname urlObj.hostname
+    console.log "BAD: #{urlObj.hostname}"
+    wbList.addItem { s: urlObj.hostname, type: 'domain', list: 'black', id: new Date().getTime() }
+    
+    return true
+  
   return false

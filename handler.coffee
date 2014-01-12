@@ -8,8 +8,8 @@ http   = require 'http'
 
 check  = require './check'
 cache  = require './cache'
-config = require './config'
-lf      = require './lovefilm'
+webIo  = require './webSocketConnection'
+lf     = require './lovefilm'
 
 for i,n of os.networkInterfaces()
   for m,j in n
@@ -18,47 +18,34 @@ for i,n of os.networkInterfaces()
 console.log ipAddresses
 
 module.exports = (req, res) ->
-  container = {id:id++, time:Math.floor new Date().getTime()/1000}
-
-  delete req.headers['cookie']                                                                      # remove non needed kram
-  delete req.headers['proxy-connection']
-
+  req.on 'readable', -> @read()
+  
   req.on 'error', (e) ->
     console.error 'http:server:request:req:e'
     console.dir    e
-    
+  
   res.on 'error', (e) ->
     console.error 'http:server:request:res:e'
     console.dir    e
-
-  req.on 'readable', ->
-    @read()
-
-  urlObj = url.parse req.url
-
-  container.method   =    req.method 
-  container.hostname = urlObj.hostname
-  container.path     = urlObj.path
   
-  container.contentid = 0
-  container.qL        = 0
-  container.type      = 0
-  container.fragment  = 0
-  container.quality   = 0
-  container.language  = 0
-  container.cached    = '0'
+  urlObj    = url.parse req.url
+  container = {id: id++, contentid: 0, qL: 0, type: 0, fragment: 0, quality: 0, language: 0, cached: '0', blocked:0, method: req.method, hostname: urlObj.hostname, path: urlObj.path, time: Math.floor new Date().getTime()/1000}
+  
+  delete req.headers['cookie']                                                                      # remove non needed stuff
+  delete req.headers['proxy-connection']
 
   if 'post' is req.method.toLowerCase()
-    config.toAll 'add-container', container
+    webIo.toAll 'add-container', container
     res.end()
     return
-    
+  
   if check.isBad urlObj
-    config.toAll 'add-container', container
+    container.blocked = 1
+    webIo.toAll 'add-container', container
     res.statusCode = 500
     res.end ''
     return
-
+  
   req.on 'end', ->
     if -1 < urlObj.path.search '/lf/encrypted/'
       lf.pathInfo urlObj.path, container
@@ -66,18 +53,24 @@ module.exports = (req, res) ->
       if lf.isCached urlObj.path
         res.end lf.getCachedData urlObj.path
         container.cached = '1'
-        config.toAll 'add-container', container
+        webIo.toAll 'add-container', container
         return
 
     if cache.deliver urlObj, res
       container.cached = '1'
-      config.toAll 'add-container', container
+      webIo.toAll 'add-container', container
       return
-
-    reqReq = http.request {  localAddress: ipAddresses[0] # 192.168.2.100' #'192.168.42.11' #
-                  , hostname: urlObj.hostname
-                  , path:     urlObj.path
-                  , headers: req.headers}, (reqRes) ->
+    
+    
+    if urlObj.hostname is 'iphone.weatherpro.meteogroup.de' and 0 is urlObj.path.search /^\/weatherpro\/WeatherFeed.php\?lid=\d+&premium=0$/
+      urlObj.path = "#{urlObj.path.slice 0, -1}1" 
+      console.log urlObj.path
+    
+    
+    reqReq = http.request {  localAddress : ipAddresses[0] # 192.168.2.100' #'192.168.42.11' #
+                           , hostname     : urlObj.hostname
+                           , path         : urlObj.path
+                           , headers      : req.headers}, (reqRes) ->
       
       res.statusCode = reqRes.statusCode
       res.setHeader i,n for i,n of reqRes.headers
@@ -92,15 +85,12 @@ module.exports = (req, res) ->
           data = Buffer.concat [data, @read()]
       else
         reqRes.pipe res
-        
-#       reqRes.on 'readable', ->
-#         console.log "readable for #{urlObj.href}"
-      
+            
       reqRes.on 'end', ->
         if -1 < urlObj.path.search '^/lf/encrypted/'
           lf.cacheData urlObj.path, data
           res.end data
-          
+        
         if -1 < urlObj.path.search "\\.(#{extensions.join '|'})$"
           cache.cache urlObj.href, data, reqRes.headers['content-encoding']
           console.log "Done Caching #{urlObj.href}"
@@ -112,8 +102,8 @@ module.exports = (req, res) ->
             zlib.gzip data, (e, result) ->
               res.end result
         
-        config.toAll 'add-container', container
-
+        webIo.toAll 'add-container', container
+    
     reqReq.end()
     
     reqReq.on 'error', (e) ->

@@ -5,6 +5,10 @@ https   = require 'https'
 
 handler = require './handler'
 
+GLOBAL.bDebug = true
+GLOBAL.lg     = (args...) -> console.log args...
+GLOBAL.dbg    = (args...) -> console.log args... if bDebug
+
 httpServer = http.createServer()
 httpServer.listen 12100, '0.0.0.0'
 
@@ -12,11 +16,11 @@ httpServer.on 'error', (e) ->
   console.error "http:server:e"
   console.dir    e
 
-httpServer.on 'request', (req, res) ->
-  handler req, res
+httpServer.on 'request', handler
 
 
 
+return
 
 options = {key: fs.readFileSync('key.pem'), cert: fs.readFileSync('cert.pem') }
 

@@ -2,17 +2,17 @@
 class ContainerViewModel
   constructor: ->
     @items = ko.observableArray []
-    
-  add: (item) ->
-    @items.push item
+  
+  prepend: (item) -> @items.unshift item
+  append:  (item) -> @items.push    item
 
 class WbListViewModel
   constructor: ->
     @items = ko.observableArray []
     @types = ko.observableArray ['domain', 'url']
     
-  add: (item) ->
-    @items.push item
+  add: (item) ->   @items.push item
+  removeAll: () -> @items.removeAll()
   
   change: (item) =>
     console.log item
